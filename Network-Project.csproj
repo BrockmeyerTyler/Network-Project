@@ -43,6 +43,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NetworkGraph.cs" />
+    <Compile Include="NetworkNode.cs" />
+    <Compile Include="NetworkLink.cs" />
+    <Compile Include="Coordinate.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
