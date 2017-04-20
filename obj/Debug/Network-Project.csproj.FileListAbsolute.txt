@@ -1,0 +1,6 @@
+B:\Coding\Workspaces\C#\Network-Project\bin\Debug\Network-Project.exe.config
+B:\Coding\Workspaces\C#\Network-Project\bin\Debug\Network-Project.exe
+B:\Coding\Workspaces\C#\Network-Project\bin\Debug\Network-Project.pdb
+B:\Coding\Workspaces\C#\Network-Project\obj\Debug\Network-Project.csprojResolveAssemblyReference.cache
+B:\Coding\Workspaces\C#\Network-Project\obj\Debug\Network-Project.exe
+B:\Coding\Workspaces\C#\Network-Project\obj\Debug\Network-Project.pdb
