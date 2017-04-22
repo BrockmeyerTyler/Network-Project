@@ -4,3 +4,13 @@ B:\Coding\Workspaces\C#\Network-Project\bin\Debug\Network-Project.pdb
 B:\Coding\Workspaces\C#\Network-Project\obj\Debug\Network-Project.csprojResolveAssemblyReference.cache
 B:\Coding\Workspaces\C#\Network-Project\obj\Debug\Network-Project.exe
 B:\Coding\Workspaces\C#\Network-Project\obj\Debug\Network-Project.pdb
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\AlgorithmsProject2\Network-Project\bin\Debug\Network-Project.exe.config
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\AlgorithmsProject2\Network-Project\obj\Debug\Network-Project.exe
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\AlgorithmsProject2\Network-Project\obj\Debug\Network-Project.pdb
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\AlgorithmsProject2\Network-Project\obj\Debug\Network-Project.csprojResolveAssemblyReference.cache
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\Network-Project\Network-Project\bin\Debug\Network-Project.exe.config
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\Network-Project\Network-Project\obj\Debug\Network-Project.exe
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\Network-Project\Network-Project\obj\Debug\Network-Project.pdb
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\Network-Project\Network-Project\bin\Debug\Network-Project.exe
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\Network-Project\Network-Project\bin\Debug\Network-Project.pdb
+C:\Users\XPS8300\Documents\Visual Studio 2015\Projects\Network-Project\Network-Project\obj\Debug\Network-Project.csprojResolveAssemblyReference.cache
