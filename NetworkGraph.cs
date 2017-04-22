@@ -8,6 +8,9 @@ namespace Network_Project
         public NetworkNode[] vertices; // IDs: 0 to 753
 		public NetworkLink[] edges; // IDs: 0 to 898
 
+		public NetworkNode source;
+		public NetworkNode target;
+
 
 		// pass the filename of the file containing the network info.
 		public NetworkGraph(string fileName)
@@ -22,10 +25,10 @@ namespace Network_Project
             using (StreamReader reader = new StreamReader(Stream))
             {
                 string[] sepNodes = { "node [", "edge [" };
-                string[] sepEdges = {  };
+				string[] sepEdges = {  };
                 //Index 0 is everything before nodes, Don't need; 
                 //Index nodes.Length is the edges, parsed after;
-                string[] arrayStrNodes = reader.ReadToEnd().Split(sepNodes, System.StringSplitOptions.RemoveEmptyEntries);
+                string[] arrayStrNodes = reader.ReadToEnd().Split(sepNodes, StringSplitOptions.RemoveEmptyEntries);
                 for (int i = 1; i < arrayStrNodes.Length; i++)
                 {
                     string[] arrNode = arrayStrNodes[i].Split('\n');
@@ -46,15 +49,15 @@ namespace Network_Project
                             switch (arrNode[j][4])
                             {
                                 case 'i':
-                                    Console.WriteLine("ID");
                                     string strID = arrNode[j].Substring(7);
                                     if (strID.Length > 1 && strID[1] == 'e')//added length check for id 0 of nodes
                                     {
                                         isEdge = true;
-                                        id = Convert.ToInt32(strID.Substring(2, strID.Length - 3));
+                                        id = Convert.ToInt32(strID.Substring(2, strID.Length - 4));
                                     }
                                     else
                                         id = Convert.ToInt32(strID);
+									Console.WriteLine("ID: " + id);
                                     break;
                                 case 'L':
                                     if(arrNode[j][5] == 'o')//Longitude
@@ -69,8 +72,8 @@ namespace Network_Project
                                     }
                                     break;
                                 case 'l':
-                                    Console.WriteLine(arrNode[j].Substring(11, arrNode[j].Length - 12));
-                                    label = arrNode[j].Substring(11, arrNode[j].Length - 12);
+                                    Console.WriteLine(arrNode[j].Substring(11, arrNode[j].Length - 13));
+                                    label = arrNode[j].Substring(11, arrNode[j].Length - 13);
                                     break;
                                 case 's':
                                     source = Convert.ToInt32(arrNode[j].Substring(10));
@@ -95,10 +98,10 @@ namespace Network_Project
                             vertices[id] = node;
                         }
                     }
-
                 }
-
             }
         }
+	
+
 	}
 }

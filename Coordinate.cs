@@ -1,4 +1,5 @@
 ﻿
+
 namespace Network_Project
 {
     class Coordinate
