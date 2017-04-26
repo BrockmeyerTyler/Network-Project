@@ -13,7 +13,7 @@ namespace Network_Project
 		public NetworkNode source;
 		public NetworkNode target;
 
-		int maxFlow = 0;
+		public int maxFlow { get; private set; }
 
 
 		//	Creates a directed network graph from a file. Automatically sets each link's capacity using an RNG.
@@ -30,6 +30,7 @@ namespace Network_Project
 			Random random = new Random(SEED);
             vertices = new NetworkNode[vertexCount + 2];	// plus 2 for the source and target nodes that will be generated.
             edges = new NetworkLink[edgeCount + 2 * K];		// plus 2 * K for the K edges going into and out of the source and target.
+			maxFlow = 0;
 
 			// begin reading and parsing the file.
             using (Stream Stream = File.OpenRead(fileName))
@@ -147,14 +148,14 @@ namespace Network_Project
                     LinkIndex++;
                 }
             }
-			Console.WriteLine("Built graph from " + fileName + ". Nodes: " + vertexCount + " Links: " + edgeCount + ".");
+			// Console.WriteLine("Built graph from " + fileName + ". Nodes: " + vertexCount + " Links: " + edgeCount + ".");
         }
 
 		// calculate the flow of the network from 'source' to 'target'.
 		// this will set 'maxFlow' and will also increase 'flow' in the affected links.
-		public void CalculateFlow()
+		public void FillGraph()
 		{
-			Console.WriteLine("Beginning flow calculations.");
+			// Console.WriteLine("Beginning flow calculations.");
 			
 			// while the flow on the path is not zero,
 			int flow;
@@ -163,10 +164,10 @@ namespace Network_Project
 				List<NetworkLink> path = GetMaxFlowPath(source, target, out flow);
 				if(flow > 0)
 				{
-					Console.WriteLine("Found Path with flow of " + flow + ":");
+					// Console.WriteLine("Found Path with flow of " + flow + ":");
 					for(int i = 0; i < path.Count; i++)
 					{
-						Console.WriteLine("\t" + path[i].source.label);
+						// Console.WriteLine("\t" + path[i].source.label);
 						path[i].flow += flow;
 					}
 				}
@@ -176,7 +177,91 @@ namespace Network_Project
 			// max flow is the amount of flow into the target node.
 			maxFlow = target.GetFlow(false);
 
-			Console.WriteLine("Flow calculations finished. Max flow: " + maxFlow);
+			// Console.WriteLine("Flow calculations finished. Max flow: " + maxFlow);
+		}
+
+		public void DestroyLink(NetworkLink link)
+		{
+			// Console.WriteLine("Destroying link: " + link);
+
+			int flowDeficit = link.flow;
+			link.flow = 0;
+			link.capacity = 0;
+
+			// if the link wasn't flowing in the first place, there are no further steps to take.
+			if(flowDeficit == 0)
+			{
+				// Console.WriteLine("The flow of this link is 0, so there are no more links to reduce.");
+				return;
+			}
+
+			// Console.WriteLine("The following links will be reduced by " + flowDeficit);
+
+			// reduce the nodes in both the forward and backward directions recursively.
+			ReduceNode(link.source, flowDeficit, false);
+			ReduceNode(link.target, flowDeficit, true);
+
+			// recalculate the maximum flow.
+			maxFlow = target.GetFlow(false);
+
+			// Console.WriteLine("Graph update complete. New max flow: " + maxFlow);
+		}
+
+		static void ReduceNode(NetworkNode node, int deficit, bool forward)
+		{
+			// if the node has no more links to follow, just quit.
+			if((forward ? node.linksOut.Count : node.linksIn.Count) == 0)
+				return;
+
+			// try to find a link that is large enough to take the whole flow hit.
+			// else, fill a list with links that have flow to add up to the deficit.
+			NetworkLink toReduce = null;
+			List<NetworkLink> reduceList = new List<NetworkLink>();
+			foreach(NetworkLink link in (forward ? node.linksOut : node.linksIn))
+			{
+				if(link.flow == deficit)
+				{
+					toReduce = link;
+					break;
+				}
+				else if(link.flow > deficit)
+				{
+					toReduce = link;
+				}
+				else if(link.flow != 0 && toReduce == null)
+				{
+					reduceList.Add(link);
+				}
+			}
+
+			// if there is a link with an equal or greater flow than the deficit, simply reduce that one.
+			if(toReduce != null)
+			{
+				// Console.WriteLine("\t" + toReduce);
+
+				toReduce.flow -= deficit;
+				ReduceNode((forward ? toReduce.target : toReduce.source), deficit, forward);
+			}
+
+			// otherwise, search through the reduce list for links that will add up their flows to the deficit and reduce each of them.
+			else if(reduceList.Count > 0)
+			{
+				int i = 0;
+				while(deficit != 0)
+				{
+					// Console.WriteLine("\t" + reduceList[i]);
+
+					int flowDeficit = reduceList[i].flow;
+					if(flowDeficit > deficit)
+						flowDeficit = deficit;
+					deficit -= flowDeficit;
+
+					reduceList[i].flow -= flowDeficit;
+					ReduceNode((forward ? reduceList[i].target : reduceList[i].source), flowDeficit, forward);
+
+					i++;
+				}
+			}
 		}
 	
 		// Finds the path that gets the maximum flow

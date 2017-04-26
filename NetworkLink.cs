@@ -20,7 +20,7 @@ namespace Network_Project
 
 		public override string ToString()
 		{
-			return source.ToString() + " to " + target.ToString() + " Cap: " + capacity + " Flow: " + flow;
+			return source.ToString() + " ----- " + target.ToString() + " | Cap: " + capacity + " Flow: " + flow;
 		}
 	}
 }
