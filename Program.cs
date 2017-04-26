@@ -21,15 +21,13 @@ namespace Network_Project
 				graph.edges[i].capacity = random.Next(MIN_CAPACITY, MAX_CAPACITY + 1);
 			}
 
-			// set the graph's source and target nodes.
-			graph.source = graph.vertices[0];
-			graph.target = graph.vertices[559];
-
 			// fill the graph's flow to achieve the max flow.
 			graph.SetFlow();
 
-			// pause so i can read the output.
-			while(true) { }
-		}
-	}
+            // pause so i can read the output.
+            //It will pause the console until a return is given, I find it easier to control than an endless while loop
+            Console.ReadLine();
+            //while (true) { }
+        }
+    }
 }

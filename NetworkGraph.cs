@@ -15,12 +15,19 @@ namespace Network_Project
 
 		int maxFlow = 0;
 
+        //Number of edges from the source and target nodes
+        const int K = 20;
+
+        //Index in vertices of source and target
+        public const int sourceIndex = 754;
+        public const int targetIndex = 755;
+
 
 		// pass the filename of the file containing the network info.
 		public NetworkGraph(string fileName)
 		{
-            vertices = new NetworkNode[754];
-            edges = new NetworkLink[899];
+            vertices = new NetworkNode[756];
+            edges = new NetworkLink[939];
             // read file with the filename provided,
             // parse each vertex and edge into the graph.
             // each vertex and edge should be placed into the arrays at their id's index.
@@ -99,6 +106,45 @@ namespace Network_Project
                     }
                 }
             }
+
+            //Declaring the source and target nodes
+            //Doesn't really matter "where" they are
+            vertices[sourceIndex] = new NetworkNode("source", 0, 0);
+            vertices[targetIndex] = new NetworkNode("target", 0, 0);
+
+            source = vertices[sourceIndex];
+            target = vertices[targetIndex];
+
+            Random rand = new Random(new DateTime().Millisecond);
+            //List to keep track of the nodes that are conncected to by the source and target
+            List<NetworkNode> sourceLinks = new List<NetworkNode>(K);
+            List<NetworkNode> targetLinks = new List<NetworkNode>(K);
+            //Index to keep track of where to add into the edges array
+            int LinkIndex = 1;
+            //generating the edges for source edges
+            while(sourceLinks.Count < sourceLinks.Capacity)
+            {
+                int i = rand.Next(0, 754);
+                if (!sourceLinks.Contains(vertices[i]))
+                {
+                    sourceLinks.Add(vertices[i]);
+                    edges[898 + LinkIndex] = new NetworkLink(vertices[754], vertices[i]);
+                    LinkIndex++;
+                }
+            }
+            //generating edges for target edges
+            //Compares to make sure the target does not connect to any of the same nodes as the source.
+            while(targetLinks.Count < targetLinks.Capacity)
+            {
+                int i = rand.Next(0, 754);
+                if (!sourceLinks.Contains(vertices[i]) && !targetLinks.Contains(vertices[i]))
+                {
+                    targetLinks.Add(vertices[i]);
+                    edges[898 + LinkIndex] = new NetworkLink(vertices[i], vertices[755]);
+                    LinkIndex++;
+                }
+            }
+
         }
 
 		public void SetFlow()
