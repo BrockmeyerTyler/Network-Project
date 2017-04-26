@@ -15,23 +15,23 @@ namespace Network_Project
 
 		int maxFlow = 0;
 
-        //Number of edges from the source and target nodes
-        const int K = 20;
 
-        //Index in vertices of source and target
-        public const int sourceIndex = 754;
-        public const int targetIndex = 755;
-
-
-		// pass the filename of the file containing the network info.
-		public NetworkGraph(string fileName)
+		//	Creates a directed network graph from a file. Automatically sets each link's capacity using an RNG.
+		//	Generates a source and target node, connecting them at maximum flow to 'K' other nodes in the graph.
+		//		fileName: name of the file containing the graph data.
+		//		vertextCount: the number of verteces contained in the file.
+		//		edgeCount: the number of edges contained in the file.
+		//		minCapacity: the minimum capacity of the links in the graph. These will be randomly generated.
+		//		maxCapacity: the maximum capacity of the links in the graph. These will be randomly generated.
+		//		K: the number of edges that the generated source and target nodes will have going into, and out of, respectfully.
+		//		SEED: the random number generator seed.
+		public NetworkGraph(string fileName, int vertexCount, int edgeCount, int minCapacity, int maxCapacity, int K, int SEED)
 		{
-            vertices = new NetworkNode[756];
-            edges = new NetworkLink[939];
-            // read file with the filename provided,
-            // parse each vertex and edge into the graph.
-            // each vertex and edge should be placed into the arrays at their id's index.
+			Random random = new Random(SEED);
+            vertices = new NetworkNode[vertexCount + 2];	// plus 2 for the source and target nodes that will be generated.
+            edges = new NetworkLink[edgeCount + 2 * K];		// plus 2 * K for the K edges going into and out of the source and target.
 
+			// begin reading and parsing the file.
             using (Stream Stream = File.OpenRead(fileName))
             using (StreamReader reader = new StreamReader(Stream))
             {
@@ -97,6 +97,7 @@ namespace Network_Project
                         {
                             NetworkLink link = new NetworkLink(vertices[source], vertices[target]);
                             edges[id] = link;
+							link.capacity = random.Next(minCapacity, maxCapacity + 1);
                         }
                         else
                         {
@@ -109,13 +110,13 @@ namespace Network_Project
 
             //Declaring the source and target nodes
             //Doesn't really matter "where" they are
-            vertices[sourceIndex] = new NetworkNode("source", 0, 0);
-            vertices[targetIndex] = new NetworkNode("target", 0, 0);
+            source = new NetworkNode("source", 0, 0);
+            target = new NetworkNode("target", 0, 0);
 
-            source = vertices[sourceIndex];
-            target = vertices[targetIndex];
+            vertices[vertexCount] = source;
+            vertices[vertexCount + 1] = target;
 
-            Random rand = new Random(new DateTime().Millisecond);
+            Random rand = new Random(SEED);
             //List to keep track of the nodes that are conncected to by the source and target
             List<NetworkNode> sourceLinks = new List<NetworkNode>(K);
             List<NetworkNode> targetLinks = new List<NetworkNode>(K);
@@ -124,11 +125,12 @@ namespace Network_Project
             //generating the edges for source edges
             while(sourceLinks.Count < sourceLinks.Capacity)
             {
-                int i = rand.Next(0, 754);
+                int i = rand.Next(0, vertexCount);
                 if (!sourceLinks.Contains(vertices[i]))
                 {
                     sourceLinks.Add(vertices[i]);
-                    edges[898 + LinkIndex] = new NetworkLink(vertices[754], vertices[i]);
+                    edges[edgeCount - 1 + LinkIndex] = new NetworkLink(source, vertices[i]);
+					edges[edgeCount - 1 + LinkIndex].capacity = 20;
                     LinkIndex++;
                 }
             }
@@ -136,27 +138,23 @@ namespace Network_Project
             //Compares to make sure the target does not connect to any of the same nodes as the source.
             while(targetLinks.Count < targetLinks.Capacity)
             {
-                int i = rand.Next(0, 754);
+                int i = rand.Next(0, vertexCount);
                 if (!sourceLinks.Contains(vertices[i]) && !targetLinks.Contains(vertices[i]))
                 {
                     targetLinks.Add(vertices[i]);
-                    edges[898 + LinkIndex] = new NetworkLink(vertices[i], vertices[755]);
+                    edges[edgeCount - 1 + LinkIndex] = new NetworkLink(vertices[i], target);
+					edges[edgeCount - 1 + LinkIndex].capacity = 20;
                     LinkIndex++;
                 }
             }
-
+			Console.WriteLine("Built graph from " + fileName + ". Nodes: " + vertexCount + " Links: " + edgeCount + ".");
         }
 
-		public void SetFlow()
+		// calculate the flow of the network from 'source' to 'target'.
+		// this will set 'maxFlow' and will also increase 'flow' in the affected links.
+		public void CalculateFlow()
 		{
-			Console.WriteLine("Trying to set maxFlow.");
-
-			// check that a source and a target actually exist.
-			if(source == null || target == null)
-			{
-				Console.WriteLine("Cannot calculate flow of graph with a null source or target.");
-				return;
-			}
+			Console.WriteLine("Beginning flow calculations.");
 			
 			// while the flow on the path is not zero,
 			int flow;
@@ -165,7 +163,7 @@ namespace Network_Project
 				List<NetworkLink> path = GetMaxFlowPath(source, target, out flow);
 				if(flow > 0)
 				{
-					Console.WriteLine("Found Path: ");
+					Console.WriteLine("Found Path with flow of " + flow + ":");
 					for(int i = 0; i < path.Count; i++)
 					{
 						Console.WriteLine("\t" + path[i].source.label);
@@ -175,21 +173,21 @@ namespace Network_Project
 
 			} while(flow != 0);
 
-			Console.WriteLine("No more Paths found.");
-
 			// max flow is the amount of flow into the target node.
 			maxFlow = target.GetFlow(false);
+
+			Console.WriteLine("Flow calculations finished. Max flow: " + maxFlow);
 		}
 	
 		// Finds the path that gets the maximum flow
 		// This runs in O(2 * edges.Count) time. As edges get destroyed, it will run progressively faster.
 		//		Edges with (flow == capacity) will not be assessed, if another edge connects to that edge's target node, the target will be assessed at that time.
 		//		Nodes with no edges going into them will not be assessed, thus all of their exiting edges will not be assessed either.
-		public static List<NetworkLink> GetMaxFlowPath(NetworkNode sourceNode, NetworkNode finalNode, out int maxFlow)
+		static List<NetworkLink> GetMaxFlowPath(NetworkNode sourceNode, NetworkNode finalNode, out int maxFlow)
 		{
 			Dictionary<NetworkNode, NetworkLink> flowPathTable = new Dictionary<NetworkNode, NetworkLink>();
 			Dictionary<NetworkNode, int> flowAmountTable = new Dictionary<NetworkNode, int>();
-			HashSet<NetworkNode> nodesFound = new HashSet<NetworkNode>();
+			HashSet<NetworkNode> nodesAddedButNotRecorded = new HashSet<NetworkNode>();
 			Stack<NetworkLink> cycleEdges = new Stack<NetworkLink>();
 
 			// add the final node to the tables. This way, the algorithm will stop at the final node.
@@ -197,7 +195,7 @@ namespace Network_Project
 			flowAmountTable.Add(finalNode, int.MaxValue);
 			
 			// recursively add nodes to the table, starting at the source node.
-			AddNodeToTables(sourceNode, ref nodesFound, ref flowPathTable, ref flowAmountTable, ref cycleEdges);
+			AddNodeToTables(sourceNode, ref nodesAddedButNotRecorded, ref flowPathTable, ref flowAmountTable, ref cycleEdges);
 
 			// reverse the stack in order to get the cycle links that are closest to the end.
 			if(cycleEdges.Count > 0)
@@ -218,13 +216,6 @@ namespace Network_Project
 					flowAmountTable[edge.source] = flow;
 				}
 			}
-			
-			Console.WriteLine("Printing table: ");
-			foreach(KeyValuePair<NetworkNode, int> kv in flowAmountTable)
-			{
-				Console.WriteLine(kv.Key.label + ": " + kv.Value);
-			}
-			
 			
 			// get the maxFlow for the path
 			maxFlow = flowAmountTable[sourceNode];
@@ -251,13 +242,13 @@ namespace Network_Project
 		// adds the passed node to the tables recursively
 		static void AddNodeToTables(
 				NetworkNode node,
-				ref HashSet<NetworkNode> nodesFound,
+				ref HashSet<NetworkNode> nodesAddedButNotRecorded,
 				ref Dictionary<NetworkNode, NetworkLink> flowPathTable,
 				ref Dictionary<NetworkNode, int> flowAmountTable,
 				ref Stack<NetworkLink> cycleEdges
 			)
 		{
-			nodesFound.Add(node);
+			nodesAddedButNotRecorded.Add(node);
 
 			NetworkLink bestChoice = null;
 			int bestFlow = 0;
@@ -268,23 +259,18 @@ namespace Network_Project
 				// if the link cannot pass anymore flow, skip it.
 				if(link.capacity - link.flow == 0)
 					continue;
-					
-				Console.WriteLine(link.capacity + "  " + link.flow);
 				
 				//	if the target of this link has been added already,
 				//		and there is no entry for it in the flow path table,
 				//		then this is a cycle edge. Don't evaluate it now.
-				if(nodesFound.Contains(link.target))
+				if(nodesAddedButNotRecorded.Contains(link.target))
 				{
-					if(!flowPathTable.ContainsKey(link.target))
-					{
-						cycleEdges.Push(link);
-						continue;
-					}
+					cycleEdges.Push(link);
+					continue;
 				}
-				else
+				else if(!flowPathTable.ContainsKey(link.target))
 				{
-					AddNodeToTables(link.target, ref nodesFound, ref flowPathTable, ref flowAmountTable, ref cycleEdges);
+					AddNodeToTables(link.target, ref nodesAddedButNotRecorded, ref flowPathTable, ref flowAmountTable, ref cycleEdges);
 				}
 				
 				//	if the minimum between the possible increase in flow on this link
@@ -302,7 +288,9 @@ namespace Network_Project
 			//	add the best choice and best flow to the tables.
 			//		if there were no outward links, or all of their (capacity - flow)s were 0, bestFlow will be 0.
 			flowPathTable.Add(node, bestChoice);
-			flowAmountTable[node] = bestFlow;
+			flowAmountTable.Add(node, bestFlow);
+
+			nodesAddedButNotRecorded.Remove(node);
 		}
 	}
 }

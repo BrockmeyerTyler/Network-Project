@@ -17,5 +17,10 @@ namespace Network_Project
 			source.AddLink(this);
 			target.AddLink(this);
 		}
+
+		public override string ToString()
+		{
+			return source.ToString() + " to " + target.ToString() + " Cap: " + capacity + " Flow: " + flow;
+		}
 	}
 }

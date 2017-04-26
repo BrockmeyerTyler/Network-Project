@@ -44,5 +44,10 @@ namespace Network_Project
 			}
 			return flow;
 		}
+
+		public override string ToString()
+		{
+			return label + " In: " + linksIn.Count + " Out: " + linksOut.Count;
+		}
 	}
 }
