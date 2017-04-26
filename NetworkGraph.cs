@@ -7,8 +7,8 @@ namespace Network_Project
 {
 	class NetworkGraph
 	{
-        public NetworkNode[] vertices; // IDs: 0 to 753
-		public NetworkLink[] edges; // IDs: 0 to 898
+        public NetworkNode[] vertices;
+		public NetworkLink[] edges;
 
 		public NetworkNode source;
 		public NetworkNode target;

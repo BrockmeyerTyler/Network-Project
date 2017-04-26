@@ -11,7 +11,6 @@ namespace Network_Project
 		const int EDGE_COUNT = 899;
 		const int MIN_CAPACITY = 1;
 		const int MAX_CAPACITY = 20;
-		const int SEED = 1;
 
         static void Main(string[] args)
 		{
@@ -19,56 +18,19 @@ namespace Network_Project
 			StreamWriter outputHighestFlow = new StreamWriter("output_highestflow.txt");
 			StreamWriter outputMincut = new StreamWriter("output_mincut.txt");
 
-
-			// the number of links generated from the source node and to the target node
-			int K = 50;
-
-			// studying the efficiency of the selected algorithms.
-			Console.WriteLine("Studying the efficiency of the selected algorithms.\n\t|K = " + K);
-			for(int j = 0; j < 2; j++)
-			{
-				for(int i = 0; i < 2; i++)
-				{
-					// build the graph using the file provided in the project description.
-					NetworkGraph graph = new NetworkGraph(GRAPH_FILE, VERTEX_COUNT, EDGE_COUNT, MIN_CAPACITY, MAX_CAPACITY, K, SEED);
-
-					// fill the graph's flow to achieve the max flow.
-					graph.FillGraph();
-					
-					// i = 0: Random Destruction
-					// i = 1: Planned Destruction
-					// j = 0: Static Routing
-					// j = 1: Dynamic routing
-					if(i == 0)
-					{
-						outputRandom.WriteLine(j == 1 ? "Dynamic" : "Static");
-						DestroyAtRandom(ref graph, j == 1, outputRandom);
-					}
-					else
-					{
-						if(j == 0)
-							DestroyHighestFlowing(ref graph, outputHighestFlow);
-						else
-							DestroyMinimumCut(ref graph, outputMincut);
-					}
-					
-				}
-			}
-
-			// studying the impact of K.
-			Console.WriteLine("\n\nStudying the impact of K:");
-			for(K = 30; K <= 60; K++)
+			// number of links between source and graph, and graph and target
+			for(int K = 30; K <= 60; K++)
 			{
 				Console.WriteLine("\t|K = " + K);
-				outputRandom.WriteLine("|K = " + K);
-				outputHighestFlow.WriteLine("|K = " + K);
-				outputMincut.WriteLine("|K = " + K);
+				outputRandom.WriteLine("\t|K = " + K);
+				outputHighestFlow.WriteLine("\t|K = " + K);
+				outputMincut.WriteLine("\t|K = " + K);
 				for(int j = 0; j < 2; j++)
 				{
 					for(int i = 0; i < 2; i++)
 					{
 						// build the graph using the file provided in the project description.
-						NetworkGraph graph = new NetworkGraph(GRAPH_FILE, VERTEX_COUNT, EDGE_COUNT, MIN_CAPACITY, MAX_CAPACITY, K, SEED);
+						NetworkGraph graph = new NetworkGraph(GRAPH_FILE, VERTEX_COUNT, EDGE_COUNT, MIN_CAPACITY, MAX_CAPACITY, K, DateTime.Now.Millisecond);
 
 						// fill the graph's flow to achieve the max flow.
 						graph.FillGraph();
