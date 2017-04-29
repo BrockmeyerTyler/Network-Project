@@ -21,16 +21,18 @@ namespace Network_Project
 			// number of links between source and graph, and graph and target
 			for(int K = 30; K <= 60; K++)
 			{
-				Console.WriteLine("\t|K = " + K);
+				int seed = DateTime.Now.Millisecond;
+				Console.WriteLine("\t|K = " + K + " |SEED: " + seed);
 				outputRandom.WriteLine("\t|K = " + K);
 				outputHighestFlow.WriteLine("\t|K = " + K);
 				outputMincut.WriteLine("\t|K = " + K);
 				for(int j = 0; j < 2; j++)
 				{
-					for(int i = 0; i < 2; i++)
+					Console.WriteLine(j == 1 ? "\tDynamic" : "\tStatic");
+					for(int i = 0; i < 3; i++)
 					{
 						// build the graph using the file provided in the project description.
-						NetworkGraph graph = new NetworkGraph(GRAPH_FILE, VERTEX_COUNT, EDGE_COUNT, MIN_CAPACITY, MAX_CAPACITY, K, DateTime.Now.Millisecond);
+						NetworkGraph graph = new NetworkGraph(GRAPH_FILE, VERTEX_COUNT, EDGE_COUNT, MIN_CAPACITY, MAX_CAPACITY, K, seed);
 
 						// fill the graph's flow to achieve the max flow.
 						graph.FillGraph();
@@ -39,19 +41,17 @@ namespace Network_Project
 						// i = 1: Planned Destruction
 						// j = 0: Static Routing
 						// j = 1: Dynamic routing
+
+						
+						outputRandom.WriteLine(j == 1 ? "Dynamic" : "Static");
+						outputHighestFlow.WriteLine(j == 1 ? "Dynamic" : "Static");
+						outputMincut.WriteLine(j == 1 ? "Dynamic" : "Static");
 						if(i == 0)
-						{
-							outputRandom.WriteLine(j == 1 ? "Dynamic" : "Static");
-							DestroyAtRandom(ref graph, j == 1, outputRandom);
-						}
+							DestroyAtRandom(ref graph, j == 1, outputRandom, seed + K);
+						else if(i == 1)
+							DestroyHighestFlowing(ref graph, j == 1, outputHighestFlow);
 						else
-						{
-							if(j == 0)
-								DestroyHighestFlowing(ref graph, outputHighestFlow);
-							else
-								DestroyMinimumCut(ref graph, outputMincut);
-						}
-					
+							DestroyMinimumCut(ref graph, j == 1, outputMincut);
 					}
 				}
 			}
@@ -69,7 +69,7 @@ namespace Network_Project
 			write.WriteLine(t + "\t" + graph.maxFlow);
 		}
 
-		static void DestroyAtRandom(ref NetworkGraph graph, bool isDynamic, StreamWriter write)
+		static void DestroyAtRandom(ref NetworkGraph graph, bool isDynamic, StreamWriter write, int seed)
 		{
 			// set up a list containing the indeces of the possible-to-destroy edges.
 			List<int> choices = new List<int>(EDGE_COUNT);
@@ -82,14 +82,14 @@ namespace Network_Project
 			int halfFlowTime = -1;
 			int totalFlowMaximum = graph.maxFlow;
 
-			Console.WriteLine("Beginning 'DestroyAtRandom()'");
+			// Console.WriteLine("Beginning 'DestroyAtRandom()'");
 
 			// loop until the maximum flow has been reduced to 0.
 			int t = 1;
 			while(graph.maxFlow != 0)
 			{
 				// get a random number from 0 to the number of possible edge choices
-				Random random = new Random(DateTime.Now.Millisecond);
+				Random random = new Random(seed);
 				int rand = random.Next(0, count);
 
 				// select the int at that index as the chosen index of the edge to destroy
@@ -112,11 +112,11 @@ namespace Network_Project
 				PrintGraphInfo(graph, t, write);
 				t++;
 			}
-			Console.WriteLine("'DestroyAtRandom()' complete. |Max flow: " + graph.maxFlow + " |Half flow time: " + halfFlowTime);
+			Console.WriteLine("'DestroyAtRandom()' complete. \t\t|Max flow: " + graph.maxFlow + " \t|Half flow time: " + halfFlowTime);
 			write.WriteLine("MaxFlow: " + graph.maxFlow + " Half flow time: " + halfFlowTime + "\n");
 		}
 
-		static void DestroyHighestFlowing(ref NetworkGraph graph, StreamWriter write)
+		static void DestroyHighestFlowing(ref NetworkGraph graph, bool isDynamic, StreamWriter write)
 		{
 			// get the list of all edges and sort it by maximum flow.
 			List<NetworkLink> edges = new List<NetworkLink>();
@@ -127,25 +127,38 @@ namespace Network_Project
 			int halfFlowTime = -1;
 			int totalFlowMaximum = graph.maxFlow;
 
-			Console.WriteLine("Beginning 'DestroyHighestFlowing()'");
+			// Console.WriteLine("Beginning 'DestroyHighestFlowing()'");
 
 			// destroy each edge in order.
 			int t = 0;
 			int j = 0;
 			while(graph.maxFlow > 0)
 			{
-				while(edges[j].flow == 0)
-					j++;
+				if(!isDynamic)
+				{
+					while(edges[j].flow == 0)
+						j++;
+				}
+
 				graph.DestroyLink(edges[j]);
-				j++;
 				
 				if(halfFlowTime == -1 && graph.maxFlow < 0.5f * totalFlowMaximum)
 					halfFlowTime = t;
+				
+				if(isDynamic)
+				{
+					graph.FillGraph();
+					edges.Sort((x, y) => -x.flow.CompareTo(y.flow));
+				}
+				else
+				{
+					j++;
+				}
 
 				PrintGraphInfo(graph, t, write);
 				t++;
 			}
-			Console.WriteLine("'DestroyHighestFlowing()' complete. |Max flow: " + graph.maxFlow + " |Half flow time: " + halfFlowTime);
+			Console.WriteLine("'DestroyHighestFlowing()' complete. \t|Max flow: " + graph.maxFlow + " \t|Half flow time: " + halfFlowTime);
 			write.WriteLine("MaxFlow: " + graph.maxFlow + " Half flow time: " + halfFlowTime + "\n");
 		}
 
@@ -157,17 +170,16 @@ namespace Network_Project
 			// add targets of the source node where the link between them has at least 1 flow.
 			foreach(NetworkLink l in source.linksOut)
 			{
-				if(l.flow > 0)
-					nodes.Add(l.target);
+				nodes.Add(l.target);
 			}
 
 			for(int i = 0; i < nodes.Count; i++)
 			{
 				foreach(NetworkLink l in nodes[i].linksOut)
 				{
-					// if the flow in the link is not 0 and is not full,
+					// if the flow in the link is not full,
 					// and if the target of the link has not already been added to the node list, add it.
-					if(l.flow != 0 && l.flow != l.capacity && !nodes.Contains(l.target))
+					if(l.flow != l.capacity && !nodes.Contains(l.target))
 					{
 						nodes.Add(l.target);
 					}
@@ -182,7 +194,7 @@ namespace Network_Project
 			return minCut;
 		}
 
-		static void DestroyMinimumCut(ref NetworkGraph graph, StreamWriter write)
+		static void DestroyMinimumCut(ref NetworkGraph graph, bool isDynamic, StreamWriter write)
 		{
 			// get the minimum cut and sort it by highest flow.
 			List<NetworkLink> minCut = FindMinimumCut(graph.source);
@@ -191,13 +203,28 @@ namespace Network_Project
 			int halfFlowTime = -1;
 			int totalFlowMaximum = graph.maxFlow;
 			
-			Console.WriteLine("Beginning 'DestroyMinimumCut()'.");
-
+			// Console.WriteLine("Beginning 'DestroyMinimumCut()'.");
+			
 			int t = 0;
-			foreach(NetworkLink link in minCut)
+			while(graph.maxFlow != 0)
 			{
+				NetworkLink link = null;
+				if(t < minCut.Count)
+					link = minCut[t];
+				else
+				{
+					Console.WriteLine("\t---MinCut Failed---");
+					int largestFlow = 0;
+					foreach(NetworkLink l in graph.edges)
+					{
+						if(l.flow > largestFlow)
+							link = l;
+					}
+				}
 				graph.DestroyLink(link);
-				graph.FillGraph();
+				
+				if(isDynamic)
+					graph.FillGraph();
 				
 				if(halfFlowTime == -1 && graph.maxFlow < 0.5f * totalFlowMaximum)
 					halfFlowTime = t;
@@ -205,7 +232,7 @@ namespace Network_Project
 				PrintGraphInfo(graph, t, write);
 				t++;
 			}
-			Console.WriteLine("'DestroyMinimumCut()' complete. |Max flow: " + graph.maxFlow + " |Half flow time: " + halfFlowTime);
+			Console.WriteLine("'DestroyMinimumCut()' complete. \t|Max flow: " + graph.maxFlow + " \t|Half flow time: " + halfFlowTime);
 			write.WriteLine("MaxFlow: " + graph.maxFlow + " Half flow time: " + halfFlowTime + "\n");
 		}
 
