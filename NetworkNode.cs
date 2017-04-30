@@ -47,7 +47,7 @@ namespace Network_Project
 
 		public override string ToString()
 		{
-			return label + " In: " + linksIn.Count + " Out: " + linksOut.Count;
+			return label;
 		}
 	}
 }

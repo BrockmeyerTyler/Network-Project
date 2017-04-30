@@ -19,9 +19,9 @@ namespace Network_Project
 			StreamWriter outputMincut = new StreamWriter("output_mincut.txt");
 
 			// number of links between source and graph, and graph and target
-			for(int K = 30; K <= 60; K++)
+			for(int K = 60; K <= 60; K++)
 			{
-				int seed = DateTime.Now.Millisecond;
+				int seed = 844;
 				Console.WriteLine("\t|K = " + K + " |SEED: " + seed);
 				outputRandom.WriteLine("\t|K = " + K);
 				outputHighestFlow.WriteLine("\t|K = " + K);
@@ -168,11 +168,14 @@ namespace Network_Project
 			List<NetworkNode> nodes = new List<NetworkNode>();
 
 			// add targets of the source node where the link between them has at least 1 flow.
-			foreach(NetworkLink l in source.linksOut)
+			foreach(NetworkLink l1 in source.linksOut)
 			{
-				nodes.Add(l.target);
+				foreach(NetworkLink l2 in l1.target.linksOut)
+				{
+					minCut.Add(l2);
+				}
 			}
-
+			/*
 			for(int i = 0; i < nodes.Count; i++)
 			{
 				foreach(NetworkLink l in nodes[i].linksOut)
@@ -191,6 +194,8 @@ namespace Network_Project
 					}
 				}
 			}
+			*/
+
 			return minCut;
 		}
 
@@ -198,7 +203,6 @@ namespace Network_Project
 		{
 			// get the minimum cut and sort it by highest flow.
 			List<NetworkLink> minCut = FindMinimumCut(graph.source);
-			minCut.Sort((x, y) => -x.flow.CompareTo(y.flow));
 			
 			int halfFlowTime = -1;
 			int totalFlowMaximum = graph.maxFlow;
@@ -208,20 +212,8 @@ namespace Network_Project
 			int t = 0;
 			while(graph.maxFlow != 0)
 			{
-				NetworkLink link = null;
-				if(t < minCut.Count)
-					link = minCut[t];
-				else
-				{
-					Console.WriteLine("\t---MinCut Failed---");
-					int largestFlow = 0;
-					foreach(NetworkLink l in graph.edges)
-					{
-						if(l.flow > largestFlow)
-							link = l;
-					}
-				}
-				graph.DestroyLink(link);
+				minCut.Sort((x, y) => -x.flow.CompareTo(y.flow));
+				graph.DestroyLink(minCut[0]);
 				
 				if(isDynamic)
 					graph.FillGraph();
