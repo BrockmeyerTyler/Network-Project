@@ -19,39 +19,44 @@ namespace Network_Project
 			StreamWriter outputMincut = new StreamWriter("output_mincut.txt");
 
 			// number of links between source and graph, and graph and target
-			for(int K = 60; K <= 60; K++)
+			for(int K = 30; K <= 60; K++)
 			{
-				int seed = 844;
+				int seed = DateTime.Now.Millisecond;
 				Console.WriteLine("\t|K = " + K + " |SEED: " + seed);
 				outputRandom.WriteLine("\t|K = " + K);
 				outputHighestFlow.WriteLine("\t|K = " + K);
 				outputMincut.WriteLine("\t|K = " + K);
 				for(int j = 0; j < 2; j++)
 				{
-					Console.WriteLine(j == 1 ? "\tDynamic" : "\tStatic");
-					for(int i = 0; i < 3; i++)
+                    Console.WriteLine(j == 1 ? "\tDynamic" : "\tStatic");
+                    for (int i = 0; i < 3; i++)
 					{
 						// build the graph using the file provided in the project description.
 						NetworkGraph graph = new NetworkGraph(GRAPH_FILE, VERTEX_COUNT, EDGE_COUNT, MIN_CAPACITY, MAX_CAPACITY, K, seed);
 
 						// fill the graph's flow to achieve the max flow.
 						graph.FillGraph();
-					
-						// i = 0: Random Destruction
-						// i = 1: Planned Destruction
-						// j = 0: Static Routing
-						// j = 1: Dynamic routing
 
-						
-						outputRandom.WriteLine(j == 1 ? "Dynamic" : "Static");
-						outputHighestFlow.WriteLine(j == 1 ? "Dynamic" : "Static");
-						outputMincut.WriteLine(j == 1 ? "Dynamic" : "Static");
-						if(i == 0)
-							DestroyAtRandom(ref graph, j == 1, outputRandom, seed + K);
-						else if(i == 1)
-							DestroyHighestFlowing(ref graph, j == 1, outputHighestFlow);
-						else
-							DestroyMinimumCut(ref graph, j == 1, outputMincut);
+                        // i = 0: Random Destruction
+                        // i = 1: Planned Destruction
+                        // j = 0: Static Routing
+                        // j = 1: Dynamic routing
+
+                        if (i == 0)
+                        {
+                            outputRandom.WriteLine(j == 1 ? "Dynamic" : "Static");
+                            DestroyAtRandom(ref graph, j == 1, outputRandom, seed + K);
+                        }
+                        else if (i == 1)
+                        {
+                            outputHighestFlow.WriteLine(j == 1 ? "Dynamic" : "Static");
+                            DestroyHighestFlowing(ref graph, j == 1, outputHighestFlow);
+                        }
+                        else
+                        {
+                            outputMincut.WriteLine(j == 1 ? "Dynamic" : "Static");
+                            DestroyMinimumCut(ref graph, j == 1, outputMincut);
+                        }
 					}
 				}
 			}
